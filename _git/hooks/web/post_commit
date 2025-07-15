@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+#
+# post-commit git hook: deploy working tree to /var/www/<projectname>
+#
+
+# abort on errors
+set -e
+
+# detect project name from cwd
+PROJECT_NAME=$(basename "$(git rev-parse --show-toplevel)")
+TARGET_DIR="/var/www/$PROJECT_NAME"
+
+echo "Deploying '$PROJECT_NAME' to $TARGET_DIR …"
+
+# remove old deploy, create target
+sudo rm -rf "$TARGET_DIR"
+sudo mkdir -p "$TARGET_DIR"
+
+# copy all files except .git
+sudo rsync -av --delete --exclude='.git' "$(git rev-parse --show-toplevel)/" "$TARGET_DIR/"
+
+# set ownership
+sudo chown -R www-data:www-data "$TARGET_DIR"
+
+echo "Deployment complete."
+exit 0
